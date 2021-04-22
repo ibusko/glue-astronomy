@@ -1,6 +1,5 @@
-import numpy as np
-
 from astropy.wcs import WCS
+from astropy.nddata import CCDData
 
 from glue.config import data_translator
 from glue.core import Data, Subset
@@ -72,8 +71,9 @@ class CCDDataHandler:
         else:
             mask = data.get_mask(subset_state=subset_state)
             values = values.copy()
-            values[~mask] = np.nan
+            # Flip mask to match astropy.ndddata formalism
+            mask = ~mask
 
         values = values * u.Unit(component.units)
 
-        return CCDData(values, mask=mask, wcs=wcs)
+        return CCDData(values, mask=mask, wcs=wcs, meta=data.meta)

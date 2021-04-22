@@ -1,5 +1,3 @@
-import numpy as np
-
 from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 from glue.config import data_translator
@@ -70,7 +68,6 @@ class SpectralCubeHandler:
         else:
             mask = data.get_mask(subset_state=subset_state)
             values = values.copy()
-            values[~mask] = np.nan
             mask = BooleanArrayMask(mask, wcs=wcs)
 
         values = values * u.Unit(component.units)
@@ -85,4 +82,4 @@ class SpectralCubeHandler:
             values = values[slc[::-1]]
             wcs = wcs.sub(subkeep)
 
-        return SpectralCube(values, mask=mask, wcs=wcs)
+        return SpectralCube(values, mask=mask, wcs=wcs, meta=data.meta)

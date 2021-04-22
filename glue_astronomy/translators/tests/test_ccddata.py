@@ -38,9 +38,9 @@ def test_to_ccddata(with_wcs):
                                           attribute=data.id['x'])
 
     assert image_subset.wcs is (WCS_CELESTIAL if with_wcs else None)
-    assert_allclose(image_subset.data, [[3.4, 2.3], [np.nan, np.nan]])
+    assert_allclose(image_subset.data, [[3.4, 2.3], [-1.1, 0.3]])
     assert image_subset.unit is u.Jy
-    assert_equal(image_subset.mask, [[1, 1], [0, 0]])
+    assert_equal(image_subset.mask, [[0, 0], [1, 1]])
 
 
 def test_to_ccddata_unitless():
@@ -135,3 +135,30 @@ def test_from_ccddata(with_wcs):
     assert image_new.wcs is (WCS_CELESTIAL if with_wcs else None)
     assert_allclose(image_new.data, [[2, 3], [4, 5]])
     assert image_new.unit is u.Jy
+
+def test_meta_round_trip():
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
+
+    meta = {'BUNIT': 'Jy/beam',
+            'some_variable': 10}
+
+    spec = CCDData([[2, 3], [4, 5]] * u.Jy, wcs=wcs, meta=meta)
+
+    data_collection = DataCollection()
+
+    data_collection['image'] = spec
+
+    data = data_collection['image']
+
+    assert isinstance(data, Data)
+    assert len(data.meta) == 2
+    assert data.meta['BUNIT'] =='Jy/beam'
+    assert data.meta['some_variable'] == 10
+
+    # Check round-tripping
+    image_new = data.get_object(attribute='data')
+    assert isinstance(image_new, CCDData)
+    assert len(image_new.meta) == 2
+    assert image_new.meta['BUNIT'] =='Jy/beam'
+    assert image_new.meta['some_variable'] == 10
